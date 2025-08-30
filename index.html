@@ -64,6 +64,11 @@
   let slowTimeActive = false;
   let gameStarted = false;
 
+  let keys = {
+    left: false,
+    right: false
+  };
+
   function drawBasket() {
     ctx.fillStyle = "#0f0";
     ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
@@ -144,6 +149,12 @@
     if (!gameOver) {
       if (Math.random() < 0.03) spawnStar();
       updateStars();
+
+      // Smooth basket movement
+      if (keys.left) basket.x -= basket.speed;
+      if (keys.right) basket.x += basket.speed;
+      basket.x = Math.max(0, Math.min(canvas.width - basket.width, basket.x));
+
       draw();
       updateScoreBoard();
       requestAnimationFrame(gameLoop);
@@ -164,10 +175,14 @@
     }
 
     if (gameStarted) {
-      if (e.key === "ArrowLeft") basket.x -= basket.speed;
-      if (e.key === "ArrowRight") basket.x += basket.speed;
-      basket.x = Math.max(0, Math.min(canvas.width - basket.width, basket.x));
+      if (e.key === "ArrowLeft") keys.left = true;
+      if (e.key === "ArrowRight") keys.right = true;
     }
+  });
+
+  document.addEventListener("keyup", function(e) {
+    if (e.key === "ArrowLeft") keys.left = false;
+    if (e.key === "ArrowRight") keys.right = false;
   });
 </script>
 
