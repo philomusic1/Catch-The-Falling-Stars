@@ -23,17 +23,32 @@
       margin-top: 10px;
       display: none;
     }
-    #startScreen {
+    #startScreen, #instructionsPanel, #leaderboard {
       position: absolute;
-      top: 40%;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
       background: rgba(0,0,0,0.8);
-      padding: 30px;
+      padding: 20px;
       border: 2px solid white;
       border-radius: 10px;
       text-align: center;
+      font-size: 18px;
+      max-width: 400px;
+    }
+    #startScreen {
+      top: 40%;
       font-size: 24px;
+    }
+    #instructionsPanel {
+      top: 20%;
+      display: none;
+    }
+    #leaderboard {
+      top: 60%;
+      display: none;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
@@ -42,17 +57,34 @@
 <canvas id="gameCanvas" width="600" height="400"></canvas>
 <div id="scoreBoard">Score: 0 | Missed: 0</div>
 <div id="startScreen">Press <strong>Enter</strong> to Start</div>
+<div id="instructionsPanel">
+  <h3>Instructions</h3>
+  <p>Use ← and → arrow keys to move the basket.</p>
+  <p>Catch falling stars to earn points.</p>
+  <p>Golden Star ⭐ = +5 points</p>
+  <p>Shield 🛡️ = Removes 1 miss</p>
+  <p>Slow Time 🕒 = Slows stars for 5 seconds</p>
+  <p>Game ends after 100 missed stars.</p>
+  <p>Press <strong>Enter</strong> to begin.</p>
+</div>
+<div id="leaderboard">
+  <h3>High Scores</h3>
+  <ol id="highScoresList"></ol>
+</div>
 
 <script>
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
   const scoreBoard = document.getElementById("scoreBoard");
   const startScreen = document.getElementById("startScreen");
+  const instructionsPanel = document.getElementById("instructionsPanel");
+  const leaderboard = document.getElementById("leaderboard");
+  const highScoresList = document.getElementById("highScoresList");
 
   const basket = {
-    x: canvas.width / 2 - 50, // wider basket
+    x: canvas.width / 2 - 50,
     y: canvas.height - 30,
-    width: 100,               // increased width
+    width: 100,
     height: 20,
     speed: 5
   };
@@ -118,7 +150,11 @@
       } else if (star.y > canvas.height) {
         stars.splice(i, 1);
         missed++;
-        if (missed >= 100) gameOver = true; // updated loss condition
+        if (missed >= 100) {
+          gameOver = true;
+          updateLeaderboard(score);
+          showLeaderboard();
+        }
       }
     }
   }
@@ -164,11 +200,36 @@
     }
   }
 
+  function updateLeaderboard(newScore) {
+    let scores = JSON.parse(localStorage.getItem("highScores")) || [];
+    scores.push(newScore);
+    scores.sort((a, b) => b - a);
+    scores = scores.slice(0, 5);
+    localStorage.setItem("highScores", JSON.stringify(scores));
+  }
+
+  function showLeaderboard() {
+    const scores = JSON.parse(localStorage.getItem("highScores")) || [];
+    highScoresList.innerHTML = "";
+    scores.forEach(score => {
+      const li = document.createElement("li");
+      li.textContent = score;
+      highScoresList.appendChild(li);
+    });
+    leaderboard.style.display = "block";
+  }
+
   document.addEventListener("keydown", function(e) {
     if (!gameStarted && (e.key === "Enter" || e.code === "Enter")) {
       gameStarted = true;
       startScreen.style.display = "none";
+      instructionsPanel.style.display = "none";
       scoreBoard.style.display = "block";
+      leaderboard.style.display = "none";
+      score = 0;
+      missed = 0;
+      gameOver = false;
+      stars.length = 0;
       gameLoop();
       return;
     }
@@ -182,6 +243,11 @@
   document.addEventListener("keyup", function(e) {
     if (e.key === "ArrowLeft") keys.left = false;
     if (e.key === "ArrowRight") keys.right = false;
+  });
+
+  // Show instructions on load
+  window.addEventListener("load", () => {
+    instructionsPanel.style.display = "block";
   });
 </script>
 
