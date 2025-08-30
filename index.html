@@ -50,9 +50,9 @@
   const startScreen = document.getElementById("startScreen");
 
   const basket = {
-    x: canvas.width / 2 - 30,
+    x: canvas.width / 2 - 50, // wider basket
     y: canvas.height - 30,
-    width: 60,
+    width: 100,               // increased width
     height: 20,
     speed: 5
   };
@@ -118,7 +118,7 @@
       } else if (star.y > canvas.height) {
         stars.splice(i, 1);
         missed++;
-        if (missed >= 5) gameOver = true;
+        if (missed >= 100) gameOver = true; // updated loss condition
       }
     }
   }
@@ -150,7 +150,6 @@
       if (Math.random() < 0.03) spawnStar();
       updateStars();
 
-      // Smooth basket movement
       if (keys.left) basket.x -= basket.speed;
       if (keys.right) basket.x += basket.speed;
       basket.x = Math.max(0, Math.min(canvas.width - basket.width, basket.x));
