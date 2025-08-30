@@ -1,87 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Catch the Falling Stara</title>
-        <style>
-            body {
-                margin: 0;
-                background: #000;
-                overflow: hidden;
-                font-family: sans-serif;
-                color: white;            
-            }
-            #gameCanvas {
-                display: block;
-                margin: 0 auto;
-                background: linear-gradient(to top, #001, #112);
-                border: 2px solid white;
-            }
-            #scoreBoard {
-                text-align: center;
-                font-size: 20px;
-                margin-top: 10px;
-            }
-        </style>
-    </head>
-    <body>
+<head>
+  <meta charset="UTF-8">
+  <title>Catch the Falling Stars</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      overflow: hidden;
+      font-family: sans-serif;
+      color: white;
+    }
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+      background: linear-gradient(to top, #001, #112);
+      border: 2px solid white;
+    }
+    #scoreBoard {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 10px;
+      display: none;
+    }
+    #startScreen {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      padding: 30px;
+      border: 2px solid white;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
 
-        <canvas id="gameCanvas" width="600" height="400"></canvas>
-        <div id="scoreBoard">Score: 0 | Missed: 0</div>
+<canvas id="gameCanvas" width="600" height="400"></canvas>
+<div id="scoreBoard">Score: 0 | Missed: 0</div>
+<div id="startScreen">Press <strong>Enter</strong> to Start</div>
 
-        <script>
-            const canvas = document.getElemenById("gameCanvas");
-            const ctx = canvas.getContext("2d");
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  const scoreBoard = document.getElementById("scoreBoard");
+  const startScreen = document.getElementById("startScreen");
 
-            const basket = {
-                x: canvas.width / 2-30,
-                y: canvas.height - 30,
-                width: 60,
-                height: 20,
-                speed: 5
-            };
+  const basket = {
+    x: canvas.width / 2 - 30,
+    y: canvas.height - 30,
+    width: 60,
+    height: 20,
+    speed: 5
+  };
 
-            const stars = [];
-            let score = 0;
-            let missed = 0;
-            let gameOver = false;
-            let slowTimeActive = false;
+  const stars = [];
+  let score = 0;
+  let missed = 0;
+  let gameOver = false;
+  let slowTimeActive = false;
+  let gameStarted = false;
 
-            function drawBasket() {
-                ctx.fillStyle = "#0f0";
-                ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
-            }
+  function drawBasket() {
+    ctx.fillStyle = "#0f0";
+    ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+  }
 
-            function drawStar(star) {
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.radius, 0, math.PI * 2);
+  function drawStar(star) {
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
 
-                if (star.type === "gold") ctx.fillStyle = "#FFD700";
-                else if (star.type === "shield") ctx.fillStyle = "#00f";
-                else if (star.type === "slow") ctx.fillStyle = "a0f";
+    if (star.type === "gold") ctx.fillStyle = "#FFD700";
+    else if (star.type === "shield") ctx.fillStyle = "#00f";
+    else if (star.type === "slow") ctx.fillStyle = "#a0f";
+    else ctx.fillStyle = "#ff0";
 
-                ctx.fil();
-                ctx.closePath();
-            }
+    ctx.fill();
+    ctx.closePath();
+  }
 
-            function spawnStar() {
-                const x = Math.random() * canvas.width;
-                const typeChance = Math.random();
-                let type = "normal";
+  function spawnStar() {
+    const x = Math.random() * canvas.width;
+    const typeChance = Math.random();
+    let type = "normal";
 
-                if (typeChance < 0.05) type = "gold";
-                else if (typeChance < 0.10) type = "shield";
-                else if (typeChance < 0.15) type = "slow";
+    if (typeChance < 0.05) type = "gold";
+    else if (typeChance < 0.10) type = "shield";
+    else if (typeChance < 0.15) type = "slow";
 
-                stars.push({ x, y: 0, radiusL 8, speed: 2 + Math.random() * 2, type });
-            }
+    stars.push({ x, y: 0, radius: 8, speed: 2 + Math.random() * 2, type });
+  }
 
-            function updateStars() {
+  function updateStars() {
     for (let i = stars.length - 1; i >= 0; i--) {
       const star = stars[i];
       star.y += star.speed;
 
-      // Check for catch
       if (
         star.y + star.radius >= basket.y &&
         star.x >= basket.x &&
@@ -118,10 +135,12 @@
   }
 
   function updateScoreBoard() {
-    document.getElementById("scoreBoard").textContent = `Score: ${score} | Missed: ${missed}`;
+    scoreBoard.textContent = `Score: ${score} | Missed: ${missed}`;
   }
 
   function gameLoop() {
+    if (!gameStarted) return;
+
     if (!gameOver) {
       if (Math.random() < 0.03) spawnStar();
       updateStars();
@@ -136,12 +155,20 @@
   }
 
   document.addEventListener("keydown", function(e) {
-    if (e.key === "ArrowLeft") basket.x -= basket.speed;
-    if (e.key === "ArrowRight") basket.x += basket.speed;
-    basket.x = Math.max(0, Math.min(canvas.width - basket.width, basket.x));
-  });
+    if (!gameStarted && (e.key === "Enter" || e.code === "Enter")) {
+      gameStarted = true;
+      startScreen.style.display = "none";
+      scoreBoard.style.display = "block";
+      gameLoop();
+      return;
+    }
 
-  gameLoop();
+    if (gameStarted) {
+      if (e.key === "ArrowLeft") basket.x -= basket.speed;
+      if (e.key === "ArrowRight") basket.x += basket.speed;
+      basket.x = Math.max(0, Math.min(canvas.width - basket.width, basket.x));
+    }
+  });
 </script>
 
 </body>
